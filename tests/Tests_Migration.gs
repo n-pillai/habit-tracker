@@ -148,5 +148,62 @@ var Tests_Migration = {
     } finally {
       TestHelpers.deleteTestSheet(testSheet);
     }
+  },
+
+  test_migration_preservesHighlightingLogic: function() {
+    var testSheet = TestHelpers.createTestSheet('migration_highlighting');
+
+    try {
+      // Set up v1.0 sheet
+      TestHelpers.createV1Sheet(testSheet);
+
+      var originalGetActive = SpreadsheetApp.getActiveSpreadsheet;
+      SpreadsheetApp.getActiveSpreadsheet = function() { return testSheet; };
+
+      var trackerSheet = testSheet.getSheetByName('Tracker');
+      var dataSheet = testSheet.getSheetByName('Data');
+
+      // Add 7 days of data with Exercise always missed, Read always done
+      var habitData = [
+        ['No', 'Yes', 'Yes'],   // Day 1
+        ['No', 'Yes', 'No'],    // Day 2
+        ['No', 'Yes', 'Yes'],   // Day 3
+        ['No', 'Yes', 'No'],    // Day 4
+        ['No', 'Yes', 'Yes'],   // Day 5
+        ['No', 'Yes', 'No'],    // Day 6
+        ['No', 'Yes', 'Yes']    // Day 7
+      ];
+      TestHelpers.addTestData(testSheet, 7, habitData);
+
+      // Perform migration (v1.0 → v1.1)
+      trackerSheet.insertRowsBefore(1, 2);
+      trackerSheet.getRange('A1').setValue('Settings →');
+      trackerSheet.getRange('B1').setValue('Days until neglect:');
+      trackerSheet.getRange('C1').setValue(7);
+
+      // Call highlightNeglectedHabits() - THIS TESTS THE FIX
+      highlightNeglectedHabits();
+
+      // Verify highlighting is based on CORRECT columns in Data sheet
+      // Exercise (column B in Data) - all "No" for 7 days → should be RED
+      var exerciseCell = trackerSheet.getRange('B4'); // v1.1: habits start at row 4
+      Assert.assertEquals('#FF0000', exerciseCell.getFontColorObject().asRgbColor().asHexString().toUpperCase(),
+        'Exercise should be red (missed 7 days)');
+
+      // Read (column C in Data) - all "Yes" → should be BLACK
+      var readCell = trackerSheet.getRange('B5');
+      Assert.assertEquals('#000000', readCell.getFontColorObject().asRgbColor().asHexString().toUpperCase(),
+        'Read should be black (done consistently)');
+
+      // Meditate (column D in Data) - mixed → should be BLACK
+      var meditateCell = trackerSheet.getRange('B6');
+      Assert.assertEquals('#000000', meditateCell.getFontColorObject().asRgbColor().asHexString().toUpperCase(),
+        'Meditate should be black (not all missed)');
+
+      SpreadsheetApp.getActiveSpreadsheet = originalGetActive;
+
+    } finally {
+      TestHelpers.deleteTestSheet(testSheet);
+    }
   }
 };

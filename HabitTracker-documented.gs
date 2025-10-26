@@ -355,6 +355,20 @@ function highlightNeglectedHabits() {
     return;
   }
 
+  // Build map of habit names to Data sheet columns (MIGRATION-SAFE)
+  // This ensures we read from the correct column regardless of habit order in Tracker sheet
+  var lastDataCol = dataSheet.getLastColumn();
+  var habitColumns = {};
+  if (lastDataCol > 1) {
+    var headerRow = dataSheet.getRange(1, 2, 1, lastDataCol - 1).getValues()[0];
+    for (var col = 0; col < headerRow.length; col++) {
+      if (headerRow[col]) {
+        // Map habit name → column number (B=2, C=3, etc.)
+        habitColumns[headerRow[col]] = col + 2;
+      }
+    }
+  }
+
   // Calculate which rows to check (last N days, where N = threshold)
   // Example: If threshold is 7 and we have 10 days of data,
   // we check rows 4-10 (the last 7 days)
@@ -364,29 +378,37 @@ function highlightNeglectedHabits() {
   // Loop through each habit
   for (var i = 0; i < habits.length; i++) {
     if (habits[i][0] !== "") { // Skip empty rows
-      // Column index for this habit in Data sheet
-      var habitColumn = i + 2;
-
-      // Get last N days (or fewer if not enough data yet) for this specific habit
-      var habitData = dataSheet.getRange(startRow, habitColumn, numRows, 1).getValues();
-
-      // Check if all entries are "No" (habit was missed every day)
-      var allMissed = true;
-      for (var j = 0; j < habitData.length; j++) {
-        if (habitData[j][0] === "Yes") {
-          allMissed = false;
-          break; // Found at least one "Yes", stop checking
-        }
-      }
-
-      // Apply color formatting to the habit name in Tracker sheet
-      // Use layout.firstHabitRow to get the correct row number
+      var habitName = habits[i][0];
       var habitCell = trackerSheet.getRange(layout.firstHabitRow + i, 2);
-      if (allMissed && numRows >= threshold) {
-        // N+ consecutive days missed - highlight in red
-        habitCell.setFontColor("#FF0000");
+
+      // Find the column for this habit in Data sheet by NAME (not by position)
+      // This is critical for migration compatibility
+      if (habitColumns[habitName]) {
+        var habitColumn = habitColumns[habitName];
+
+        // Get last N days (or fewer if not enough data yet) for this specific habit
+        var habitData = dataSheet.getRange(startRow, habitColumn, numRows, 1).getValues();
+
+        // Check if all entries are "No" (habit was missed every day)
+        var allMissed = true;
+        for (var j = 0; j < habitData.length; j++) {
+          if (habitData[j][0] === "Yes") {
+            allMissed = false;
+            break; // Found at least one "Yes", stop checking
+          }
+        }
+
+        // Apply color formatting to the habit name in Tracker sheet
+        if (allMissed && numRows >= threshold) {
+          // N+ consecutive days missed - highlight in red
+          habitCell.setFontColor("#FF0000");
+        } else {
+          // Habit is being done or not enough data yet - keep black
+          habitCell.setFontColor("#000000");
+        }
       } else {
-        // Habit is being done or not enough data yet - keep black
+        // Habit not in Data sheet yet (new habit with no history)
+        // Keep it black (not neglected, just new)
         habitCell.setFontColor("#000000");
       }
     }
