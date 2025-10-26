@@ -2,14 +2,19 @@
 
 A step-by-step guide to set up your personal habit tracking system using Google Sheets.
 
+**Current Version:** v1.1 (includes configurable neglect threshold)
+
+**Upgrading from v1.0?** See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)
+
 ## Table of Contents
 
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
 3. [Step-by-Step Setup](#step-by-step-setup)
-4. [Daily Usage](#daily-usage)
-5. [Advanced Features](#advanced-features)
-6. [Troubleshooting](#troubleshooting)
+4. [Configuring Your Threshold](#configuring-your-threshold)
+5. [Daily Usage](#daily-usage)
+6. [Advanced Features](#advanced-features)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -18,6 +23,7 @@ A step-by-step guide to set up your personal habit tracking system using Google 
 This habit tracker system uses Google Sheets with an embedded Apps Script to:
 - Track daily habit completion with checkboxes
 - Automatically save historical data
+- **Highlight neglected habits in red (configurable threshold)**
 - Reset your tracker each day with a single click
 - Build a database of your habit consistency over time
 
@@ -51,33 +57,47 @@ This is your daily interface for checking off habits.
    - Type: `Tracker`
    - Press Enter
 
-2. **Add headers:**
-   - Click cell **B1** and type: `Habit Name`
-   - Click cell **C1** and type: `✓` (or "Done")
+2. **Add settings row (v1.1):**
+   - Click cell **A1** and type: `Settings →`
+   - Click cell **B1** and type: `Days until neglect:`
+   - Click cell **C1** and type: `7` (or your preferred number from 1-30)
 
-3. **Add your habits:**
-   - Click cell **B2** and type your first habit (e.g., "Exercise")
-   - Click cell **B3** and type your second habit (e.g., "Read")
-   - Continue adding habits in cells B4, B5, etc.
+   **Optional formatting:**
+   - Select cells A1:C1
+   - Click the background color button and choose light yellow
+   - Make cell B1 bold
+
+3. **Leave row 2 blank** (for visual separation)
+
+4. **Add headers in row 3:**
+   - Click cell **B3** and type: `Habit Name`
+   - Click cell **C3** and type: `✓` (or "Done")
+
+5. **Add your habits starting in row 4:**
+   - Click cell **B4** and type your first habit (e.g., "Exercise")
+   - Click cell **B5** and type your second habit (e.g., "Read")
+   - Continue adding habits in cells B6, B7, etc.
    - Add as many habits as you want to track
 
-4. **Add checkboxes:**
-   - Click cell **C2**
+6. **Add checkboxes starting in row 4:**
+   - Click cell **C4**
    - Go to **Insert** menu → **Checkbox**
-   - A checkbox appears in C2
-   - Click cell **C2** and drag down to copy the checkbox to all rows with habits
-   - Example: If you have 5 habits (B2-B6), drag the checkbox from C2 to C6
+   - A checkbox appears in C4
+   - Click cell **C4** and drag down to copy the checkbox to all rows with habits
+   - Example: If you have 5 habits (B4-B8), drag the checkbox from C4 to C8
 
 **Your Tracker sheet should now look like this:**
 
 ```
-    A  |       B        |   C
--------|----------------|-------
-   1   | Habit Name     |   ✓
-   2   | Exercise       |   ☐
-   3   | Read           |   ☐
-   4   | Meditate       |   ☐
-   5   | Drink Water    |   ☐
+    A         |         B           |   C
+--------------|---------------------|-------
+   1   Settings → | Days until neglect: |   7
+   2            |                     |
+   3      #     | Habit Name          |   ✓
+   4      1     | Exercise            |   ☐
+   5      2     | Read                |   ☐
+   6      3     | Meditate            |   ☐
+   7      4     | Drink Water         |   ☐
 ```
 
 ### Step 3: Set Up the Data Sheet
@@ -155,6 +175,47 @@ The first time you use the script, you'll need to authorize it.
    - Check your **Data** sheet - you should see today's date and completion status
 
 **Congratulations! Your habit tracker is now set up!**
+
+---
+
+## Configuring Your Threshold
+
+The threshold determines how many consecutive days a habit can be missed before it's highlighted in red.
+
+### Changing the Threshold
+
+1. **Open your Tracker sheet**
+2. **Click cell C1** (next to "Days until neglect:")
+3. **Enter a number between 1 and 30**
+4. **Press Enter**
+
+The new threshold takes effect on your next reset.
+
+### Threshold Examples
+
+| Value | When Habits Turn Red | Best For |
+|-------|---------------------|----------|
+| 1 | After 1 day missed | Ultra-strict tracking |
+| 3 | After 3 days missed | Important daily habits |
+| 7 | After 7 days missed | Balanced (default) |
+| 14 | After 14 days missed | Weekly habits |
+| 30 | After 30 days missed | Monthly check-ins |
+
+### Tips
+
+- **Strict thresholds (1-3 days)**: Good for critical daily habits like medication or exercise
+- **Balanced thresholds (7 days)**: Default setting, works for most daily habits
+- **Lenient thresholds (14-30 days)**: Better for habits you only do weekly or monthly
+
+### Invalid Values
+
+If you enter:
+- Text (e.g., "abc")
+- Negative numbers
+- Zero
+- Numbers over 30
+
+The script will automatically use the default value of 7 days.
 
 ---
 

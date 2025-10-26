@@ -17,7 +17,9 @@ This habit tracker helps you build consistent daily habits by providing:
 - **Easy Setup**: Get started in 10-15 minutes
 - **Daily Tracking**: Check off habits as you complete them
 - **Automatic Logging**: Historical data saved automatically before reset
-- **Visual Feedback**: Habits missed 7+ days in a row appear in red
+- **Configurable Visual Feedback**: Set your own threshold (1-30 days) for highlighting neglected habits in red
+- **One-Click Migration**: Easy upgrade from v1.0 to v1.1 with data preservation
+- **Backward Compatible**: v1.1 script works with both old and new sheet layouts
 - **Custom Menu**: Simple "Reset for Tomorrow" button in Google Sheets
 - **Flexible**: Track as many habits as you want
 - **Data Export**: All data stored in Google Sheets format (easy to analyze/export)
@@ -25,16 +27,24 @@ This habit tracker helps you build consistent daily habits by providing:
 
 ## Quick Start
 
+### New Users (v1.1)
+
 1. Create a Google Sheet with two sheets: `Tracker` and `Data`
-2. Add your habits and checkboxes to the Tracker sheet
-3. Copy the script from `HabitTracker.gs` into Google Apps Script
-4. Use the custom menu to reset daily
+2. Add a settings row with your preferred threshold (default: 7 days)
+3. Add your habits and checkboxes to the Tracker sheet
+4. Copy the script from `HabitTracker.gs` into Google Apps Script
+5. Use the custom menu to reset daily
 
 **For detailed setup instructions, see [SETUP.md](SETUP.md)**
+
+### Existing Users (v1.0 → v1.1)
+
+Upgrading? See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for one-click migration!
 
 ## Documentation
 
 - **[SETUP.md](SETUP.md)** - Complete step-by-step setup guide with troubleshooting
+- **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)** - Upgrade guide from v1.0 to v1.1
 - **[SPREADSHEET_TEMPLATE.md](SPREADSHEET_TEMPLATE.md)** - Spreadsheet structure reference
 - **[HabitTracker.gs](HabitTracker.gs)** - The script (minimal version)
 - **[HabitTracker-documented.gs](HabitTracker-documented.gs)** - Fully commented version
