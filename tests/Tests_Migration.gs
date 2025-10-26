@@ -73,5 +73,80 @@ var Tests_Migration = {
     } finally {
       TestHelpers.deleteTestSheet(testSheet);
     }
+  },
+
+  test_migration_preservesDataSheetColumns: function() {
+    var testSheet = TestHelpers.createTestSheet('migration_data_preservation');
+
+    try {
+      // Set up v1.0 sheet
+      TestHelpers.createV1Sheet(testSheet);
+
+      var originalGetActive = SpreadsheetApp.getActiveSpreadsheet;
+      SpreadsheetApp.getActiveSpreadsheet = function() { return testSheet; };
+
+      var trackerSheet = testSheet.getSheetByName('Tracker');
+      var dataSheet = testSheet.getSheetByName('Data');
+
+      // Add historical data before migration (3 days worth)
+      var habitData = [
+        ['Yes', 'Yes', 'No'],   // Day 1: Exercise=Yes, Read=Yes, Meditate=No
+        ['Yes', 'No', 'Yes'],   // Day 2: Exercise=Yes, Read=No, Meditate=Yes
+        ['No', 'Yes', 'Yes']    // Day 3: Exercise=No, Read=Yes, Meditate=Yes
+      ];
+      TestHelpers.addTestData(testSheet, 3, habitData);
+
+      // Verify pre-migration Data sheet structure
+      Assert.assertEquals('Exercise', dataSheet.getRange('B1').getValue(), 'Pre-migration: Exercise should be in column B');
+      Assert.assertEquals('Read', dataSheet.getRange('C1').getValue(), 'Pre-migration: Read should be in column C');
+      Assert.assertEquals('Meditate', dataSheet.getRange('D1').getValue(), 'Pre-migration: Meditate should be in column D');
+      Assert.assertEquals('Yes', dataSheet.getRange('B2').getValue(), 'Pre-migration: Day 1 Exercise data');
+      Assert.assertEquals('Yes', dataSheet.getRange('C2').getValue(), 'Pre-migration: Day 1 Read data');
+      Assert.assertEquals('No', dataSheet.getRange('D2').getValue(), 'Pre-migration: Day 1 Meditate data');
+
+      // Perform migration (v1.0 → v1.1)
+      trackerSheet.insertRowsBefore(1, 2);
+      trackerSheet.getRange('A1').setValue('Settings →');
+      trackerSheet.getRange('B1').setValue('Days until neglect:');
+      trackerSheet.getRange('C1').setValue(7);
+
+      // Verify migration happened correctly
+      var layout = getSheetLayout();
+      Assert.assertEquals('1.1', layout.version, 'Should be v1.1 after migration');
+
+      // Check habits for new day (day 4)
+      trackerSheet.getRange('C4').setValue(true);  // Exercise checked
+      trackerSheet.getRange('C5').setValue(false); // Read unchecked
+      trackerSheet.getRange('C6').setValue(true);  // Meditate checked
+
+      // Call saveData() - THIS IS THE CRITICAL TEST
+      saveData();
+
+      // Verify Data sheet headers are PRESERVED (not overwritten)
+      Assert.assertEquals('Exercise', dataSheet.getRange('B1').getValue(), 'Post-migration: Exercise header should remain in column B');
+      Assert.assertEquals('Read', dataSheet.getRange('C1').getValue(), 'Post-migration: Read header should remain in column C');
+      Assert.assertEquals('Meditate', dataSheet.getRange('D1').getValue(), 'Post-migration: Meditate header should remain in column D');
+
+      // Verify historical data is PRESERVED
+      Assert.assertEquals('Yes', dataSheet.getRange('B2').getValue(), 'Historical data row 2 Exercise should be preserved');
+      Assert.assertEquals('Yes', dataSheet.getRange('C2').getValue(), 'Historical data row 2 Read should be preserved');
+      Assert.assertEquals('No', dataSheet.getRange('D2').getValue(), 'Historical data row 2 Meditate should be preserved');
+      Assert.assertEquals('Yes', dataSheet.getRange('B3').getValue(), 'Historical data row 3 Exercise should be preserved');
+      Assert.assertEquals('No', dataSheet.getRange('C3').getValue(), 'Historical data row 3 Read should be preserved');
+      Assert.assertEquals('Yes', dataSheet.getRange('D3').getValue(), 'Historical data row 3 Meditate should be preserved');
+
+      // Verify new data (day 4) is written to CORRECT columns
+      Assert.assertEquals('Yes', dataSheet.getRange('B5').getValue(), 'Day 4: Exercise should be Yes (checked) in column B');
+      Assert.assertEquals('No', dataSheet.getRange('C5').getValue(), 'Day 4: Read should be No (unchecked) in column C');
+      Assert.assertEquals('Yes', dataSheet.getRange('D5').getValue(), 'Day 4: Meditate should be Yes (checked) in column D');
+
+      // Verify no extra columns were created
+      Assert.assertEquals(4, dataSheet.getLastColumn(), 'Should still have only 4 columns (Date + 3 habits)');
+
+      SpreadsheetApp.getActiveSpreadsheet = originalGetActive;
+
+    } finally {
+      TestHelpers.deleteTestSheet(testSheet);
+    }
   }
 };

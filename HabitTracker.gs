@@ -109,13 +109,42 @@ function saveData() {
   var habits = trackerSheet.getRange(layout.habitNameRange).getValues();
   var checked = trackerSheet.getRange(layout.checkboxRange).getValues();
 
+  // Get existing headers from Data sheet
+  var lastDataCol = dataSheet.getLastColumn();
+  var existingHeaders = {};
+  if (lastDataCol > 1) {
+    var headerRow = dataSheet.getRange(1, 2, 1, lastDataCol - 1).getValues()[0];
+    for (var col = 0; col < headerRow.length; col++) {
+      if (headerRow[col]) {
+        existingHeaders[headerRow[col]] = col + 2; // Column number (B=2, C=3, etc.)
+      }
+    }
+  }
+
   var lastRow = dataSheet.getLastRow() + 1;
   dataSheet.getRange(lastRow, 1).setValue(today);
 
+  // Track next available column for new habits
+  var nextColumn = lastDataCol + 1;
+
   for (var i = 0; i < habits.length; i++) {
     if (habits[i][0] !== "") {
-      dataSheet.getRange(lastRow, i+2).setValue(checked[i][0] ? "Yes" : "No");
-      dataSheet.getRange(1, i+2).setValue(habits[i][0]);
+      var habitName = habits[i][0];
+      var column;
+
+      // Check if habit already exists in Data sheet
+      if (existingHeaders[habitName]) {
+        column = existingHeaders[habitName];
+      } else {
+        // New habit - add to next available column
+        column = nextColumn;
+        dataSheet.getRange(1, column).setValue(habitName);
+        existingHeaders[habitName] = column;
+        nextColumn++;
+      }
+
+      // Save data in the correct column
+      dataSheet.getRange(lastRow, column).setValue(checked[i][0] ? "Yes" : "No");
     }
   }
 }
