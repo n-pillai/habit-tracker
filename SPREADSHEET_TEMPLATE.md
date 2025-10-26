@@ -2,50 +2,100 @@
 
 This document describes the structure of the Google Sheets spreadsheet required for the Habit Tracker system.
 
+**Current Version:** v1.1 (includes configurable neglect threshold)
+
+**Upgrading from v1.0?** See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)
+
 ## Sheet Structure
 
 Your Google Sheets document must contain **two sheets**:
 
-### 1. Tracker Sheet
+### 1. Tracker Sheet (v1.1)
 
 **Sheet Name:** `Tracker`
 
 This is your daily habit tracking interface.
 
-**Column Structure:**
+**Row Structure:**
 
-| Column A | Column B      | Column C |
-|----------|---------------|----------|
-| (empty)  | Habit Name    | ✓        |
-| 1        | Exercise      | ☐        |
-| 2        | Read          | ☐        |
-| 3        | Meditate      | ☐        |
-| 4        | Drink Water   | ☐        |
-| 5        | Sleep 8 hours | ☐        |
+| Row | Column A    | Column B              | Column C |
+|-----|-------------|-----------------------|----------|
+| 1   | Settings →  | Days until neglect:   | 7        |
+| 2   | (blank)     | (blank)               | (blank)  |
+| 3   | #           | Habit Name            | ✓        |
+| 4   | 1           | Exercise              | ☐        |
+| 5   | 2           | Read                  | ☐        |
+| 6   | 3           | Meditate              | ☐        |
+| 7   | 4           | Drink Water           | ☐        |
+| 8   | 5           | Sleep 8 hours         | ☐        |
 
 **Setup Instructions:**
 
-- **Column A (Row numbers):** Optional row numbers for reference (rows 2-100)
-- **Column B (Habit Names):** Enter your habit names starting in cell B2
-  - B1: "Habit Name" (header)
-  - B2-B100: Your habit names
-- **Column C (Checkboxes):** Insert checkboxes for tracking completion
-  - C1: "✓" or "Done" (header)
-  - C2-C100: Checkboxes (Insert > Checkbox in Google Sheets)
+#### Row 1: Settings Row
+- **A1:** `Settings →` (label indicating this is the settings area)
+- **B1:** `Days until neglect:` (label for the threshold setting)
+- **C1:** `7` (the number of days - **you can customize this from 1-30**)
+
+**What does this number mean?**
+- If you set it to `7`, habits missed 7+ consecutive days turn red
+- If you set it to `3`, habits missed 3+ consecutive days turn red
+- If you set it to `14`, habits missed 14+ consecutive days turn red
+
+**Formatting (optional but recommended):**
+- Background color for A1:C1: Light yellow (#FFF2CC)
+- Bold text for B1
+- Center-align C1
+
+#### Row 2: Blank Separator
+- Leave this row empty for visual separation between settings and data
+
+#### Row 3: Headers
+- **A3:** `#` or leave empty (optional row numbers)
+- **B3:** `Habit Name`
+- **C3:** `✓` or `Done`
+
+**Formatting (optional):**
+- Bold text for row 3
+- Consider freezing rows 1-3 (View > Freeze > 3 rows)
+
+#### Row 4+: Habits
+- **Column A:** Optional row numbers (1, 2, 3, ...) starting at A4
+- **Column B:** Your habit names starting at B4
+  - B4: "Exercise"
+  - B5: "Read"
+  - B6: "Meditate"
+  - ... (continue for all your habits)
+- **Column C:** Checkboxes starting at C4
+  - Insert > Checkbox in Google Sheets
+  - One checkbox per habit
+
+**Range Support:**
+- The script supports rows 4-102 (up to 99 habits)
+- To add more, modify the script ranges
 
 **Example Data:**
 ```
-Row 1: [Headers]
-  B1: "Habit Name"
-  C1: "✓"
+Row 1: [Settings]
+  A1: "Settings →"
+  B1: "Days until neglect:"
+  C1: 7
 
-Row 2: [First Habit]
-  B2: "Exercise"
-  C2: [Checkbox - unchecked]
+Row 2: [Blank]
 
-Row 3: [Second Habit]
-  B3: "Read"
-  C3: [Checkbox - unchecked]
+Row 3: [Headers]
+  A3: "#"
+  B3: "Habit Name"
+  C3: "✓"
+
+Row 4: [First Habit]
+  A4: 1
+  B4: "Exercise"
+  C4: [Checkbox - unchecked]
+
+Row 5: [Second Habit]
+  A5: 2
+  B5: "Read"
+  C5: [Checkbox - unchecked]
 
 ... (continue for all your habits)
 ```
@@ -79,31 +129,39 @@ This sheet stores historical data automatically when you reset the tracker.
 - Each time you reset, a new row is added with today's completion data
 - Values are "Yes" (completed) or "No" (not completed)
 
-## Initial Setup Checklist
+## Initial Setup Checklist (v1.1)
 
 1. ✓ Create a new Google Sheets document
 2. ✓ Create a sheet named `Tracker`
-3. ✓ Add "Habit Name" in cell B1
-4. ✓ Add "✓" or "Done" in cell C1
-5. ✓ List your habits in column B starting at B2
-6. ✓ Insert checkboxes in column C starting at C2 (one for each habit)
-7. ✓ Create a sheet named `Data`
-8. ✓ Add "Date" in cell A1 of the Data sheet
-9. ✓ Add the script (see SETUP.md for instructions)
+3. ✓ Add settings row in row 1:
+   - A1: "Settings →"
+   - B1: "Days until neglect:"
+   - C1: 7 (or your preferred threshold)
+4. ✓ Leave row 2 blank
+5. ✓ Add headers in row 3:
+   - B3: "Habit Name"
+   - C3: "✓"
+6. ✓ List your habits in column B starting at B4
+7. ✓ Insert checkboxes in column C starting at C4 (one for each habit)
+8. ✓ Create a sheet named `Data`
+9. ✓ Add "Date" in cell A1 of the Data sheet
+10. ✓ Add the script (see SETUP.md for instructions)
 
 ## Example Template
 
-You can visualize the template as:
+You can visualize the v1.1 template as:
 
 **Tracker Sheet:**
 ```
-    A  |       B        |   C
--------|----------------|-------
-   1   | Habit Name     |   ✓
-   2   | Exercise       |   ☐
-   3   | Read           |   ☐
-   4   | Meditate       |   ☐
-   5   | Drink Water    |   ☐
+    A         |         B           |   C
+--------------|---------------------|-------
+   1   Settings → | Days until neglect: |   7
+   2            |                     |
+   3      #     | Habit Name          |   ✓
+   4      1     | Exercise            |   ☐
+   5      2     | Read                |   ☐
+   6      3     | Meditate            |   ☐
+   7      4     | Drink Water         |   ☐
 ```
 
 **Data Sheet (initially):**

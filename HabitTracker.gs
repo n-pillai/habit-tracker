@@ -2,19 +2,101 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Habit Tracker')
     .addItem('Reset for Tomorrow', 'resetDaily')
+    .addSeparator()
+    .addItem('Migrate to v1.1 (One-time)', 'migrateToV1_1')
     .addToUi();
 }
 
-function resetDaily() {
-  // Save today's data before resetting
-  saveData();
+function getSheetLayout() {
+  var trackerSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
+  var b1Value = trackerSheet.getRange("B1").getValue();
 
-  // Highlight neglected habits (7+ days missed in a row)
+  if (b1Value === "Days until neglect:") {
+    return {
+      version: "1.1",
+      thresholdCell: "C1",
+      headerRow: 3,
+      firstHabitRow: 4,
+      habitNameRange: "B4:B102",
+      checkboxRange: "C4:C102"
+    };
+  } else {
+    return {
+      version: "1.0",
+      thresholdCell: null,
+      defaultThreshold: 7,
+      headerRow: 1,
+      firstHabitRow: 2,
+      habitNameRange: "B2:B100",
+      checkboxRange: "C2:C100"
+    };
+  }
+}
+
+function getNeglectThreshold() {
+  var layout = getSheetLayout();
+
+  if (layout.version === "1.1") {
+    var trackerSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
+    var threshold = trackerSheet.getRange(layout.thresholdCell).getValue();
+
+    if (typeof threshold !== "number" || threshold < 1 || threshold > 30) {
+      return 7;
+    }
+
+    return Math.floor(threshold);
+  } else {
+    return layout.defaultThreshold;
+  }
+}
+
+function migrateToV1_1() {
+  var trackerSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
+  var ui = SpreadsheetApp.getUi();
+
+  if (trackerSheet.getRange("B1").getValue() === "Days until neglect:") {
+    ui.alert("Already Migrated",
+      "Your sheet is already using v1.1 format!",
+      ui.ButtonSet.OK);
+    return;
+  }
+
+  var response = ui.alert(
+    "Migrate to v1.1?",
+    "This will add a settings row at the top.\n\n" +
+    "Your habits and data will be preserved.\n\n" +
+    "Continue?",
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  trackerSheet.insertRowsBefore(1, 2);
+
+  trackerSheet.getRange("A1").setValue("Settings →");
+  trackerSheet.getRange("B1").setValue("Days until neglect:");
+  trackerSheet.getRange("C1").setValue(7);
+
+  trackerSheet.getRange("A1:C1").setBackground("#FFF2CC");
+  trackerSheet.getRange("B1").setFontWeight("bold");
+  trackerSheet.getRange("C1").setHorizontalAlignment("center");
+
+  ui.alert("Success!",
+    "Migration complete!\n\n" +
+    "You can now customize the neglect threshold in cell C1.\n\n" +
+    "Default is set to 7 days.",
+    ui.ButtonSet.OK);
+}
+
+function resetDaily() {
+  saveData();
   highlightNeglectedHabits();
 
-  // Reset checkboxes
+  var layout = getSheetLayout();
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
-  var range = sheet.getRange("C2:C100");
+  var range = sheet.getRange(layout.checkboxRange);
   range.uncheck();
 }
 
@@ -22,16 +104,14 @@ function saveData() {
   var today = new Date().toDateString();
   var trackerSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
   var dataSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');
-  
-  // Get habit names and completion status
-  var habits = trackerSheet.getRange("B2:B100").getValues();
-  var checked = trackerSheet.getRange("C2:C100").getValues();
-  
-  // Add today's date to data sheet
+  var layout = getSheetLayout();
+
+  var habits = trackerSheet.getRange(layout.habitNameRange).getValues();
+  var checked = trackerSheet.getRange(layout.checkboxRange).getValues();
+
   var lastRow = dataSheet.getLastRow() + 1;
   dataSheet.getRange(lastRow, 1).setValue(today);
-  
-  // Record which habits were completed
+
   for (var i = 0; i < habits.length; i++) {
     if (habits[i][0] !== "") {
       dataSheet.getRange(lastRow, i+2).setValue(checked[i][0] ? "Yes" : "No");
@@ -43,30 +123,25 @@ function saveData() {
 function highlightNeglectedHabits() {
   var trackerSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
   var dataSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');
+  var layout = getSheetLayout();
+  var threshold = getNeglectThreshold();
 
-  // Get all habits from tracker
-  var habits = trackerSheet.getRange("B2:B100").getValues();
+  var habits = trackerSheet.getRange(layout.habitNameRange).getValues();
 
-  // Get last 7 rows of data (if available)
   var lastDataRow = dataSheet.getLastRow();
   if (lastDataRow < 2) {
-    // Not enough data yet, reset all colors to black
-    trackerSheet.getRange("B2:B100").setFontColor("#000000");
+    trackerSheet.getRange(layout.habitNameRange).setFontColor("#000000");
     return;
   }
 
-  var startRow = Math.max(2, lastDataRow - 6); // Last 7 days
+  var startRow = Math.max(2, lastDataRow - (threshold - 1));
   var numRows = lastDataRow - startRow + 1;
 
-  // Loop through each habit
   for (var i = 0; i < habits.length; i++) {
     if (habits[i][0] !== "") {
-      var habitColumn = i + 2; // Column B is index 0, but data starts at column 2
-
-      // Get last 7 days of data for this habit
+      var habitColumn = i + 2;
       var habitData = dataSheet.getRange(startRow, habitColumn, numRows, 1).getValues();
 
-      // Check if all entries are "No"
       var allMissed = true;
       for (var j = 0; j < habitData.length; j++) {
         if (habitData[j][0] === "Yes") {
@@ -75,18 +150,16 @@ function highlightNeglectedHabits() {
         }
       }
 
-      // Set color based on performance
-      var habitCell = trackerSheet.getRange(i + 2, 2); // Row i+2, Column B
-      if (allMissed && numRows >= 7) {
-        habitCell.setFontColor("#FF0000"); // Red for 7+ days missed
+      var habitCell = trackerSheet.getRange(layout.firstHabitRow + i, 2);
+      if (allMissed && numRows >= threshold) {
+        habitCell.setFontColor("#FF0000");
       } else {
-        habitCell.setFontColor("#000000"); // Black (normal)
+        habitCell.setFontColor("#000000");
       }
     }
   }
 }
 
-// This function is required for the web app to work
 function doGet() {
   resetDaily();
   return HtmlService.createHtmlOutput(
