@@ -163,26 +163,46 @@ function highlightNeglectedHabits() {
     return;
   }
 
+  // Build map of habit names to Data sheet columns
+  var lastDataCol = dataSheet.getLastColumn();
+  var habitColumns = {};
+  if (lastDataCol > 1) {
+    var headerRow = dataSheet.getRange(1, 2, 1, lastDataCol - 1).getValues()[0];
+    for (var col = 0; col < headerRow.length; col++) {
+      if (headerRow[col]) {
+        habitColumns[headerRow[col]] = col + 2;
+      }
+    }
+  }
+
   var startRow = Math.max(2, lastDataRow - (threshold - 1));
   var numRows = lastDataRow - startRow + 1;
 
   for (var i = 0; i < habits.length; i++) {
     if (habits[i][0] !== "") {
-      var habitColumn = i + 2;
-      var habitData = dataSheet.getRange(startRow, habitColumn, numRows, 1).getValues();
-
-      var allMissed = true;
-      for (var j = 0; j < habitData.length; j++) {
-        if (habitData[j][0] === "Yes") {
-          allMissed = false;
-          break;
-        }
-      }
-
+      var habitName = habits[i][0];
       var habitCell = trackerSheet.getRange(layout.firstHabitRow + i, 2);
-      if (allMissed && numRows >= threshold) {
-        habitCell.setFontColor("#FF0000");
+
+      // Find the column for this habit in Data sheet
+      if (habitColumns[habitName]) {
+        var habitColumn = habitColumns[habitName];
+        var habitData = dataSheet.getRange(startRow, habitColumn, numRows, 1).getValues();
+
+        var allMissed = true;
+        for (var j = 0; j < habitData.length; j++) {
+          if (habitData[j][0] === "Yes") {
+            allMissed = false;
+            break;
+          }
+        }
+
+        if (allMissed && numRows >= threshold) {
+          habitCell.setFontColor("#FF0000");
+        } else {
+          habitCell.setFontColor("#000000");
+        }
       } else {
+        // Habit not in Data sheet yet (new habit with no history)
         habitCell.setFontColor("#000000");
       }
     }
