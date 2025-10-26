@@ -91,9 +91,24 @@ Tue Jan 02 | Yes      | No   | Yes      | Yes
 
 See [SETUP.md](SETUP.md) for setup instructions.
 
+## Testing
+
+Automated tests are available in the `tests/` directory.
+
+- **[tests/README.md](tests/README.md)** - Test suite documentation and running instructions
+- **[TESTING_AUTOMATION.md](TESTING_AUTOMATION.md)** - Complete automation guide
+- **[TESTING_v1.1.0.md](TESTING_v1.1.0.md)** - Manual testing checklist
+
+Run tests by copying files to Apps Script and executing `runAllTests()`.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues or pull requests.
+
+When contributing:
+- Write tests for new features (see `tests/` directory)
+- Ensure all tests pass before submitting
+- Update documentation as needed
 
 ## License
 
