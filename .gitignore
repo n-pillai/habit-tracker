@@ -1,0 +1,23 @@
+# R history
+.Rhistory
+
+# clasp (Google Apps Script CLI)
+.clasp.json
+
+# Node modules (if using clasp)
+node_modules/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test output
+test-output/
+*.log
