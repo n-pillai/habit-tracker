@@ -87,8 +87,10 @@ You won't get the configurable threshold feature, but everything else works.
 
 - All habit names (shifted down 2 rows)
 - All checkboxes (shifted down 2 rows)
-- All Data sheet history (untouched)
+- **All Data sheet history (untouched and correctly aligned)**
 - All formatting (colors, fonts, etc.)
+
+> **Note:** In v1.1.1+, we fixed a critical bug where Data sheet columns could become misaligned after migration. The `saveData()` function now matches habits by name (not position), ensuring your historical data columns remain correctly aligned regardless of the sheet layout version.
 
 ### ➕ Added
 
@@ -179,13 +181,21 @@ If you enter an invalid value (text, negative, zero, >30), the script defaults t
 3. Go to **Insert** → **Checkbox**
 4. Drag down to copy to all habit rows
 
-### Data Sheet Shows Errors
+### Data Sheet Column Misalignment (Fixed in v1.1.1+)
 
-**Cause:** The Data sheet is NOT modified during migration, so this shouldn't happen.
+**Previous Issue (v1.1.0):** In the initial v1.1 release, there was a bug where Data sheet columns could become misaligned after migration, causing headers to be overwritten.
 
-**Solution:**
-- If you see errors in the Data sheet, they were likely there before migration
-- Migration only affects the Tracker sheet
+**Status:** **FIXED** in v1.1.1
+
+**If you're on v1.1.0:**
+1. Update to v1.1.1+ immediately
+2. The fix ensures habit data is matched by name, not position
+3. Historical data will be preserved correctly going forward
+
+**If you already experienced corruption:**
+1. Restore from Google Sheets version history to before the corruption
+2. Update to v1.1.1+ script
+3. Re-migrate using the updated script
 
 ### Script Errors After Migration
 

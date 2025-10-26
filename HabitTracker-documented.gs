@@ -233,13 +233,19 @@ function resetDaily() {
  * 1. Gets current date
  * 2. Reads habit names from Tracker sheet (using layout-appropriate range)
  * 3. Reads checkbox states from Tracker sheet
- * 4. Creates new row in Data sheet with date and completion status
- * 5. Updates Data sheet headers with habit names
+ * 4. Maps habit names to existing columns in Data sheet (MIGRATION-SAFE)
+ * 5. Creates new row in Data sheet with date and completion status
+ * 6. Adds new habits to next available columns if needed
  *
  * DATA FORMAT:
  * - Each row represents one day
  * - Column A: Date (e.g., "Mon Jan 01 2024")
  * - Columns B+: "Yes" if habit completed, "No" if not
+ *
+ * MIGRATION SAFETY:
+ * This function matches habits by NAME, not by position. This ensures that
+ * after migration (when habits shift from row 2 to row 4), the historical
+ * data columns remain correctly aligned with the habit names.
  *
  * VERSION COMPATIBILITY:
  * Uses getSheetLayout() to work with both v1.0 and v1.1 formats.
@@ -259,22 +265,53 @@ function saveData() {
   var habits = trackerSheet.getRange(layout.habitNameRange).getValues();
   var checked = trackerSheet.getRange(layout.checkboxRange).getValues();
 
+  // Get existing headers from Data sheet to match habits by name
+  // This prevents column misalignment after migration
+  var lastDataCol = dataSheet.getLastColumn();
+  var existingHeaders = {};
+  if (lastDataCol > 1) {
+    // Read all existing habit names from header row (columns B onwards)
+    var headerRow = dataSheet.getRange(1, 2, 1, lastDataCol - 1).getValues()[0];
+    for (var col = 0; col < headerRow.length; col++) {
+      if (headerRow[col]) {
+        // Map habit name to column number (B=2, C=3, etc.)
+        existingHeaders[headerRow[col]] = col + 2;
+      }
+    }
+  }
+
   // Find the next empty row in Data sheet
   var lastRow = dataSheet.getLastRow() + 1;
 
   // Write today's date in column A
   dataSheet.getRange(lastRow, 1).setValue(today);
 
+  // Track next available column for new habits
+  var nextColumn = lastDataCol + 1;
+
   // Loop through all habits and record completion status
   for (var i = 0; i < habits.length; i++) {
     // Only process rows that have a habit name (skip empty rows)
     if (habits[i][0] !== "") {
-      // Write "Yes" or "No" based on checkbox state
-      dataSheet.getRange(lastRow, i+2).setValue(checked[i][0] ? "Yes" : "No");
+      var habitName = habits[i][0];
+      var column;
 
-      // Update header row with habit name
-      // This ensures habit names stay in sync if you add/rename habits
-      dataSheet.getRange(1, i+2).setValue(habits[i][0]);
+      // Check if habit already exists in Data sheet
+      if (existingHeaders[habitName]) {
+        // Use existing column - this preserves historical data alignment
+        column = existingHeaders[habitName];
+      } else {
+        // New habit - add to next available column
+        column = nextColumn;
+        dataSheet.getRange(1, column).setValue(habitName);
+        existingHeaders[habitName] = column;
+        nextColumn++;
+      }
+
+      // Save data in the correct column
+      // This ensures data always goes to the right habit column,
+      // even if habit order changed in Tracker sheet
+      dataSheet.getRange(lastRow, column).setValue(checked[i][0] ? "Yes" : "No");
     }
   }
 }
