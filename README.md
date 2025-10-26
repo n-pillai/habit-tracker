@@ -7,6 +7,7 @@ A simple, effective habit tracking system using Google Sheets and Apps Script.
 This habit tracker helps you build consistent daily habits by providing:
 - ✅ Simple checkbox interface for daily tracking
 - 📊 Automatic historical data logging
+- 🔴 Visual alerts for neglected habits (7+ days missed)
 - 🔄 One-click daily reset
 - 📈 Built-in data for progress analysis
 - ☁️ Cloud-based (accessible anywhere with Google Sheets)
@@ -16,6 +17,7 @@ This habit tracker helps you build consistent daily habits by providing:
 - **Easy Setup**: Get started in 10-15 minutes
 - **Daily Tracking**: Check off habits as you complete them
 - **Automatic Logging**: Historical data saved automatically before reset
+- **Visual Feedback**: Habits missed 7+ days in a row appear in red
 - **Custom Menu**: Simple "Reset for Tomorrow" button in Google Sheets
 - **Flexible**: Track as many habits as you want
 - **Data Export**: All data stored in Google Sheets format (easy to analyze/export)
@@ -41,8 +43,9 @@ This habit tracker helps you build consistent daily habits by providing:
 
 1. **Track**: Check boxes throughout the day as you complete habits
 2. **Reset**: Click "Habit Tracker" → "Reset for Tomorrow" before bed
-3. **Review**: The `Data` sheet automatically builds your history
-4. **Analyze**: Create charts and analyze your consistency over time
+3. **Notice**: Habits missed 7+ days in a row turn red for easy identification
+4. **Review**: The `Data` sheet automatically builds your history
+5. **Analyze**: Create charts and analyze your consistency over time
 
 ## Example
 

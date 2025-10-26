@@ -7,6 +7,7 @@
  * - Custom menu for easy access to reset function
  * - Daily checkbox tracking for habits
  * - Automatic data saving to historical log
+ * - Visual highlighting of neglected habits (7+ days missed in red)
  * - Web app endpoint for automated resets
  *
  * REQUIRED SHEETS:
@@ -34,7 +35,8 @@ function onOpen() {
  *
  * WORKFLOW:
  * 1. Saves today's completed habits to the Data sheet
- * 2. Unchecks all checkboxes in the Tracker sheet
+ * 2. Highlights habits that have been missed 7+ days in a row (in red)
+ * 3. Unchecks all checkboxes in the Tracker sheet
  *
  * This prepares your tracker for the next day while preserving historical data.
  *
@@ -45,6 +47,9 @@ function onOpen() {
 function resetDaily() {
   // Save today's data before resetting
   saveData();
+
+  // Highlight neglected habits (7+ days missed in a row)
+  highlightNeglectedHabits();
 
   // Reset checkboxes in the Tracker sheet
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
@@ -141,6 +146,73 @@ function doGet() {
     '<h1>Success!</h1><p>Your habits have been reset for tomorrow.</p>' +
     '<p><a href="' + SpreadsheetApp.getActiveSpreadsheet().getUrl() + '">Return to Spreadsheet</a></p>'
   );
+}
+
+/**
+ * Highlights habits that have been neglected (missed 7+ days in a row).
+ *
+ * BEHAVIOR:
+ * - Checks the last 7 days of data in the Data sheet
+ * - If a habit shows "No" for all 7 days, colors it red in the Tracker sheet
+ * - If a habit has at least one "Yes", colors it black (normal)
+ * - If there aren't 7 days of data yet, all habits remain black
+ *
+ * PURPOSE:
+ * Provides visual feedback on which habits need attention, helping you
+ * identify patterns and stay accountable.
+ *
+ * This function is called automatically by resetDaily().
+ */
+function highlightNeglectedHabits() {
+  var trackerSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tracker');
+  var dataSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');
+
+  // Get all habits from tracker sheet (column B, rows 2-100)
+  var habits = trackerSheet.getRange("B2:B100").getValues();
+
+  // Get last 7 rows of data (if available)
+  var lastDataRow = dataSheet.getLastRow();
+  if (lastDataRow < 2) {
+    // Not enough data yet (no entries or just headers), reset all colors to black
+    trackerSheet.getRange("B2:B100").setFontColor("#000000");
+    return;
+  }
+
+  // Calculate which rows to check (last 7 days)
+  // startRow = last row - 6, but at least row 2
+  var startRow = Math.max(2, lastDataRow - 6);
+  var numRows = lastDataRow - startRow + 1;
+
+  // Loop through each habit
+  for (var i = 0; i < habits.length; i++) {
+    if (habits[i][0] !== "") { // Skip empty rows
+      // Column index for this habit in Data sheet
+      // habits[0] is in column B (tracker), which maps to column 2 (data)
+      var habitColumn = i + 2;
+
+      // Get last 7 days (or fewer) of data for this specific habit
+      var habitData = dataSheet.getRange(startRow, habitColumn, numRows, 1).getValues();
+
+      // Check if all entries are "No" (habit was missed every day)
+      var allMissed = true;
+      for (var j = 0; j < habitData.length; j++) {
+        if (habitData[j][0] === "Yes") {
+          allMissed = false;
+          break; // Found at least one "Yes", stop checking
+        }
+      }
+
+      // Apply color formatting to the habit name in Tracker sheet
+      var habitCell = trackerSheet.getRange(i + 2, 2); // Row i+2, Column B
+      if (allMissed && numRows >= 7) {
+        // 7+ consecutive days missed - highlight in red
+        habitCell.setFontColor("#FF0000");
+      } else {
+        // Habit is being done or not enough data yet - keep black
+        habitCell.setFontColor("#000000");
+      }
+    }
+  }
 }
 
 /**
