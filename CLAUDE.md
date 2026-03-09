@@ -2,25 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ⚠️ SESSION CONTINUITY
-
-**IMPORTANT: When starting a new session, always check for session notes files first!**
-
-Look for files matching pattern: `*Notes*.md` or `*SESSION*.md` with recent dates.
-
-Current session notes file: **`Habit Tracker Notes 10.26.2025.md`**
-
-These files contain:
-- Summary of previous session's work
-- Current bug status and incomplete fixes
-- Git commit status (pushed vs. unpushed)
-- Debugging plans and next steps
-- Critical context needed to resume work
-
-**Do not proceed with major changes without reading the latest session notes.**
-
----
-
 ## Repository Overview
 
 This is a habit tracking system implemented as a Google Sheets spreadsheet with an embedded Google Apps Script. It provides daily habit tracking with automatic data persistence and historical logging.
