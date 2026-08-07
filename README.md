@@ -93,7 +93,8 @@ See [SETUP.md](SETUP.md) for setup instructions.
 
 ## Testing
 
-Automated tests are available in the `tests/` directory.
+A test suite lives in the `tests/` directory. It runs inside the Apps Script
+editor (copy the test files in and run them there) — there is no CI runner.
 
 - **[tests/README.md](tests/README.md)** - Test suite documentation and running instructions
 - **[TESTING_AUTOMATION.md](TESTING_AUTOMATION.md)** - Complete automation guide

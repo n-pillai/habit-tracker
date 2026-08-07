@@ -98,14 +98,18 @@ Since this is a Google Apps Script:
 
 ### Adding More Habits Support
 
-Change range from 100 to desired number in both functions:
-```javascript
-// In resetDaily()
-var range = sheet.getRange("C2:C200"); // Changed from C100 to C200
+Ranges are no longer hardcoded in `resetDaily()`/`saveData()` — they come from
+`getSheetLayout()`, which returns the version-appropriate layout. Extend the
+ranges there:
 
-// In saveData()
-var habits = trackerSheet.getRange("B2:B200").getValues();
-var checked = trackerSheet.getRange("C2:C200").getValues();
+```javascript
+// In getSheetLayout(), v1.1 branch (rows 4-102 by default):
+habitNameRange: "B4:B202",  // Changed from B102 to B202
+checkboxRange: "C4:C202"    // Changed from C102 to C202
+
+// v1.0 branch (rows 2-100 by default):
+habitNameRange: "B2:B200",
+checkboxRange: "C2:C200"
 ```
 
 ### Changing Date Format
