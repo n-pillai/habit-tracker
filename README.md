@@ -115,6 +115,8 @@ When contributing:
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
+GPL-3.0 is a deliberate choice for this repo (most of my other repos are MIT): if you build on this tracker, your version should stay open source too.
+
 ## Support
 
 Having issues? Check the [Troubleshooting section in SETUP.md](SETUP.md#troubleshooting).
